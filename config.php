@@ -1,11 +1,20 @@
 <?php
+
+	// SQL db info
+	define('MYSQL_HOST',  'localhost');
+	define('MYSQL_USER',  'root');
+	define('MYSQL_PASS',  '');
+	define('MYSQL_DB',    'rank');
 	
-	$host = 'localhost';
-	$user = 'root';
-	$pass = 'toor';
-	$db   = 'fearage';
+	$mysql = mysqli_connect(MYSQL_HOST, MYSQL_USER, MYSQL_PASS, MYSQL_DB);
 	
-	mysql_connect($host, $user, $pass);
-	mysql_select_db($db);
+	/* Vérification de la connexion */
+	if (mysqli_connect_errno()) {
+    printf("Mysql fail: : %s\n", mysqli_connect_error());
+    exit();
+	}
+	
+	$hidereferer = "https://privatelink.de/?";
 	
 ?>
+<!-- Rate my lame v0.2 alpha -->

@@ -4,11 +4,11 @@
 	
 	if (isset($_GET['user']) && !empty($_GET['user']) && is_string($_GET['user']))
 	{
-		$user = mysql_real_escape_string($_GET['user']);
+		$user = mysqli_real_escape_string($mysql, $_GET['user']);
 		
 		
-		$sql = mysql_query("SELECT COUNT(*) AS total FROM datas WHERE Nick = '".$user."' ORDER BY rate DESC LIMIT 10");
-		$total = mysql_fetch_assoc($sql);
+		$sql = mysqli_query($mysql, "SELECT COUNT(*) AS total FROM datas WHERE Nick = '".$user."' ORDER BY id DESC LIMIT 10");
+		$total = mysqli_fetch_assoc($sql);
 		$total = $total['total'];
 			
 		$number_page = ceil($total / 10);
@@ -30,9 +30,9 @@
 	
 		$first = ($n - 1) * 10;
 		
-		$sql = mysql_query("SELECT id, Nick, Board, Link, Rate FROM datas WHERE Nick = '".$user."' ORDER BY rate DESC LIMIT ".$first.", 10");
+		$sql = mysqli_query($mysql, "SELECT * FROM datas WHERE Nick = '".$user."' ORDER BY id DESC LIMIT ".$first.", 10");
 		
-		if (!mysql_num_rows($sql))
+		if (!mysqli_num_rows($sql))
 		{
 			?>
 			<p class="error_not_found">Aucun élement ne correspond à votre recherche.</p>
@@ -46,12 +46,12 @@
 	else if (isset($_GET['search']) && !empty($_GET['search']) && is_string($_GET['search']))
 	{
 		$search = str_replace(array('%', '_', '-', '"', '\'', '\\', '//', "\t", ' '), '', $search);
-		$search = mysql_real_escape_string($_GET['search']);
+		$search = mysqli_real_escape_string($mysql, $_GET['search']);
 		
-		$sql = mysql_query("SELECT COUNT(*) AS total FROM datas WHERE Nick LIKE '%".$search."%' OR
-							Board LIKE '%".$search."%' OR Link LIKE '%".$search."%' ORDER BY rate DESC LIMIT 10");
+		$sql = mysqli_query($mysql, "SELECT COUNT(*) AS total FROM datas WHERE Nick LIKE '%".$search."%' OR
+							Board LIKE '%".$search."%' OR Link LIKE '%".$search."%' ORDER BY id DESC LIMIT 10");
 							
-		$total = mysql_fetch_assoc($sql);
+		$total = mysqli_fetch_assoc($sql);
 		$total = $total['total'];
 			
 		$number_page = ceil($total / 10);
@@ -72,10 +72,10 @@
 			$n = 1;
 	
 		$first = ($n - 1) * 10;
-		$sql = mysql_query("SELECT id, Nick, Board, Link, Rate FROM datas WHERE Nick LIKE '%".$search."%' OR
-							Board LIKE '%".$search."%' OR Link LIKE '%".$search."%' ORDER BY rate DESC LIMIT ".$first.", 10");
+		$sql = mysqli_query($mysql, "SELECT * FROM datas WHERE Nick LIKE '%".$search."%' OR
+							Board LIKE '%".$search."%' OR Link LIKE '%".$search."%' ORDER BY id DESC LIMIT ".$first.", 10");
 		
-		if (!mysql_num_rows($sql))
+		if (!mysqli_num_rows($sql))
 		{
 			?>
 			<p class="error_not_found">Aucun élement ne correspond à votre recherche.</p>
@@ -88,8 +88,8 @@
 	}
 	else
 	{
-		$sql = mysql_query("SELECT COUNT(*) AS total FROM datas");
-		$total = mysql_fetch_assoc($sql);
+		$sql = mysqli_query($mysql, "SELECT COUNT(*) AS total FROM datas");
+		$total = mysqli_fetch_assoc($sql);
 		$total = $total['total'];
 			
 		$number_page = ceil($total / 10);
@@ -111,27 +111,34 @@
 	
 		$first = ($n - 1) * 10;
 		
-		$sql = mysql_query("SELECT id, Nick, Board, Link, Rate FROM datas ORDER BY rate DESC LIMIT ".$first.", 10");
+		$sql = mysqli_query($mysql, "SELECT * FROM datas ORDER BY id DESC LIMIT ".$first.", 10");
 	}
 	?>
 	
 	<table class="tab_list">
-				
+
 					<tr>
 						<td width="250"><strong>NICK</strong></td>
 						<td width="250"><strong>BOARD</strong></td>
-						<td width="250"><strong>LINK</strong></td>
-						<td width="250"><strong>RATE</strong></td>
+						<td width="250"><strong>SCREENSHOT</strong></td>
+						<td width="250"><strong>RATE/HATE</strong></td>
 					</tr>
 					<?php
-						while($datas = mysql_fetch_array($sql))
+						while($datas = mysqli_fetch_array($sql))
 						{
 							
 							?>
 							<tr>
-								<td width="250"><a id="user" href="#" title="<?php echo htmlentities($datas['Nick']);?>" onclick="search_from_user(this.title); return false;"><?php echo htmlentities($datas['Nick']);?></a></td>
-								<td width="250"><?php echo htmlentities($datas['Board']);?></td>
-								<td width="250"><a href="images/gkhXp.png" rel="lightbox"><?php echo htmlentities($datas['Link']);?></td>
+								<td width="250"><a id="user" title="<?php echo htmlentities($datas['Nick']);?>" onclick="search_from_user(this.title); return false;"><?php echo htmlentities($datas['Nick']);?></a></td>
+								<td width="250"><a href="<?php echo $hidereferer . htmlentities($datas['Link']);?>" title="<?php echo htmlentities($datas['Board']);?>"><?php echo htmlentities($datas['Board']);?></a></td>
+								<td width="250"><?php
+								if (!empty($datas['Screenshot'])){ ?>
+								<a href="<?php echo htmlentities($datas['Screenshot']);?>" class="highslide" onclick="return hs.expand(this)" onmouseover="getCover(event)" cover="<?php echo htmlentities($datas['Screenshot']);?>" onmouseleave="ungetCover(event)">Click to view</a>
+								<?php }
+								else { ?>
+								<label style="color: grey;" onmouseover="getCover(event)" cover="<?php echo htmlentities($datas['Screenshot']);?>" onmouseleave="ungetCover(event)">Unavailable</label>
+								<?php } ?>
+							</td>
 								<td width="250"><img style="margin-right: 11px;" src="images/thumbs-up2.gif"></img>
 												<img style="margin-right: 11px;" src="images/thumbs-down1.gif"></img>
 												<span style="font-size:14px;"><?php echo rand(60,99);?> %</span>
