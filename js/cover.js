@@ -1,6 +1,7 @@
-
-
 /**
+  cover function took from a private tracker about hentai (lol, no joke)
+
+
 function getCover(event) {
   image = event.target.attributes.cover.value
   $('#coverCont img').remove()

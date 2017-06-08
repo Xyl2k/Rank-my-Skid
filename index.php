@@ -10,10 +10,58 @@
       <script type="text/javascript" src="highslide/highslide-with-gallery.js"></script>
       <link rel="stylesheet" type="text/css" href="highslide/highslide.css" />
       <link rel='shortcut icon' href='images/favicon.ico' type='image/x-icon' />
-   </head>
+    <script type="text/javascript">
+	/**
+	* Function Name: cwRating()
+	* Function Author: CodexWorld
+	* Description: cwRating() function is used for implement the rating system. cwRating() function insert like or dislike data into the database and display the rating count at the target div.
+	* id = Unique ID, like or dislike is based on this ID.
+	* type = Use 1 for like and 0 for dislike.
+	* target = Target div ID where the total number of likes or dislikes will display.
+	**/
+	function cwRating(id,type,target){
+		$.ajax({
+			type:'POST',
+			url:'rating.php',
+			data:'id='+id+'&type='+type,
+			success:function(msg){
+				if(msg == 'err'){
+					alert('Some problem occured, please try again.');
+				}else if(msg == 'ae'){
+					alert('You have already submitted the rating.');	
+				}else{
+					$('#'+target).html(msg+' %');
+				}
+			}
+		});
+	}
+	
+	function paginationData(page_num) {
+		page_num = page_num?page_num:0;
+		var res = $('#input_search').val();
+		var keywords = res.replace("Search...", "");
+		$.ajax({
+			 type: 'POST',
+			 url: 'search.js.php',
+			 data:'page='+page_num+'&search='+keywords,
+			 beforeSend: function () {
+				  $('#list_fail').css("opacity",".5");
+			 },
+			 success: function (html) {
+				  $('#list_fail').html(html);
+				  $('#list_fail').css("opacity","");
+			 }
+		});
+	}
+	</script>
+</head>
 
    <body onload="search();">
       <script type="text/javascript">
+	/**
+	* JavaScript thumbnail viewer
+	* Highslide JS - highslide.com
+	**/
          hs.graphicsDir = 'highslide/imgs/';
          hs.align = 'center';
          hs.transitions = ['expand', 'crossfade'];

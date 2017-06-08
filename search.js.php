@@ -1,163 +1,101 @@
 ﻿<?php
-	
 	require('config.php');
-	
-	if (isset($_GET['user']) && !empty($_GET['user']) && is_string($_GET['user']))
-	{
-		$user = mysqli_real_escape_string($mysql, $_GET['user']);
-		
-		
-		$sql = mysqli_query($mysql, "SELECT COUNT(*) AS total FROM datas WHERE Nick = '".$user."' ORDER BY id DESC LIMIT 10");
-		$total = mysqli_fetch_assoc($sql);
-		$total = $total['total'];
-			
-		$number_page = ceil($total / 10);
-		
-		if (isset($_GET['n']) && !empty($_GET['n']))
-		{
-			if (is_numeric($_GET['n']) && !is_float($_GET['n']))
-			{
-				if ($_GET['n'] < 1)
-					$n = 1;
-				else
-					$n = $_GET['n'];
-			}
-			else
-				$n = 1;
-		}
-		else
-			$n = 1;
-	
-		$first = ($n - 1) * 10;
-		
-		$sql = mysqli_query($mysql, "SELECT * FROM datas WHERE Nick = '".$user."' ORDER BY id DESC LIMIT ".$first.", 10");
-		
-		if (!mysqli_num_rows($sql))
-		{
-			?>
-			<p class="error_not_found">Aucun élement ne correspond à votre recherche.</p>
-			
-			<?php
-			return;
-		}
-		echo '<div id="d_user"></div>';
-	}
-	
-	else if (isset($_GET['search']) && !empty($_GET['search']) && is_string($_GET['search']))
-	{
-		$search = str_replace(array('%', '_', '-', '"', '\'', '\\', '//', "\t", ' '), '', $search);
-		$search = mysqli_real_escape_string($mysql, $_GET['search']);
-		
-		$sql = mysqli_query($mysql, "SELECT COUNT(*) AS total FROM datas WHERE Nick LIKE '%".$search."%' OR
-							Board LIKE '%".$search."%' OR Link LIKE '%".$search."%' ORDER BY id DESC LIMIT 10");
-							
-		$total = mysqli_fetch_assoc($sql);
-		$total = $total['total'];
-			
-		$number_page = ceil($total / 10);
-		
-		if (isset($_GET['n']) && !empty($_GET['n']))
-		{
-			if (is_numeric($_GET['n']) && !is_float($_GET['n']))
-			{
-				if ($_GET['n'] < 1)
-					$n = 1;
-				else
-					$n = $_GET['n'];
-			}
-			else
-				$n = 1;
-		}
-		else
-			$n = 1;
-	
-		$first = ($n - 1) * 10;
-		$sql = mysqli_query($mysql, "SELECT * FROM datas WHERE Nick LIKE '%".$search."%' OR
-							Board LIKE '%".$search."%' OR Link LIKE '%".$search."%' ORDER BY id DESC LIMIT ".$first.", 10");
-		
-		if (!mysqli_num_rows($sql))
-		{
-			?>
-			<p class="error_not_found">Aucun élement ne correspond à votre recherche.</p>
-			
-			<?php
-			return;
-		}
-		echo '<div id="d_search"></div>';
-		
-	}
-	else
-	{
-		$sql = mysqli_query($mysql, "SELECT COUNT(*) AS total FROM datas");
-		$total = mysqli_fetch_assoc($sql);
-		$total = $total['total'];
-			
-		$number_page = ceil($total / 10);
-		
-		if (isset($_GET['n']) && !empty($_GET['n']))
-		{
-			if (is_numeric($_GET['n']) && !is_float($_GET['n']))
-			{
-				if ($_GET['n'] < 1)
-					$n = 1;
-				else
-					$n = $_GET['n'];
-			}
-			else
-				$n = 1;
-		}
-		else
-			$n = 1;
-	
-		$first = ($n - 1) * 10;
-		
-		$sql = mysqli_query($mysql, "SELECT * FROM datas ORDER BY id DESC LIMIT ".$first.", 10");
-	}
-	?>
-	
-	<table class="tab_list">
+    include('Pagination.class.php');
 
-					<tr>
-						<td width="250"><strong>NICK</strong></td>
-						<td width="250"><strong>BOARD</strong></td>
-						<td width="250"><strong>SCREENSHOT</strong></td>
-						<td width="250"><strong>RATE/HATE</strong></td>
-					</tr>
-					<?php
-						while($datas = mysqli_fetch_array($sql))
-						{
-							
-							?>
-							<tr>
-								<td width="250"><a id="user" title="<?php echo htmlentities($datas['Nick']);?>" onclick="search_from_user(this.title); return false;"><?php echo htmlentities($datas['Nick']);?></a></td>
-								<td width="250"><a href="<?php echo $hidereferer . htmlentities($datas['Link']);?>" title="<?php echo htmlentities($datas['Board']);?>"><?php echo htmlentities($datas['Board']);?></a></td>
-								<td width="250"><?php
-								if (!empty($datas['Screenshot'])){ ?>
-								<a href="<?php echo htmlentities($datas['Screenshot']);?>" class="highslide" onclick="return hs.expand(this)" onmouseover="getCover(event)" cover="<?php echo htmlentities($datas['Screenshot']);?>" onmouseleave="ungetCover(event)">Click to view</a>
-								<?php }
-								else { ?>
-								<label style="color: grey;" onmouseover="getCover(event)" cover="<?php echo htmlentities($datas['Screenshot']);?>" onmouseleave="ungetCover(event)">Unavailable</label>
-								<?php } ?>
-							</td>
-								<td width="250"><img style="margin-right: 11px;" src="images/thumbs-up2.gif"></img>
-												<img style="margin-right: 11px;" src="images/thumbs-down1.gif"></img>
-												<span style="font-size:14px;"><?php echo rand(60,99);?> %</span>
-								</td>
-							</tr>
-							<?php
-						}
-					?>
-				
-			</table>
-		
-		<?php
-		
-			for ($i = 0; $i < $number_page; $i++)
-			{
-				?>
-				<a <?php if ($n == ($i+1)) echo 'style="color: red;"';?> href="#" onclick="refresh_by_pagination(this.title); return false;" title="<?php echo ($i + 1);?>"><?php echo ($i + 1);?></a>
-				<?php
-			}
-			
-		?>
-		
+	$limit = 10;
+	$start = isset($_POST['page']) ? intval($_POST['page']) : 0;
+
+	if (isset($_REQUEST['search']) && !empty($_REQUEST['search']) && is_string($_REQUEST['search'])) {
+		$search = $_REQUEST['search'];
+		$search = str_replace('%', '', $search);
+		$search = $mysql->quote('%' . $search . '%');
+
+		$req = $mysql->query('SELECT COUNT(*) AS total FROM datas WHERE Nick LIKE CONCAT("%", ' . $search . ', "%") OR Link LIKE CONCAT("%", ' . $search . ', "%")');
+		$req->execute(array($search, $search));
+		$total = $req->fetch(PDO::FETCH_LAZY)->total;
+
+		$req = $mysql->prepare('SELECT *, IF((up+down) = 0, 0, ROUND((up-down) / (up+down) * 100)) as total_percent  FROM datas WHERE Nick LIKE ' . $search . ' OR Link LIKE ' . $search . ' ORDER BY id DESC LIMIT ' . $start . ', ' . $limit);
+		$req->execute(array($search, $search));
+	}
+	else {
+		$req   = $mysql->query('SELECT COUNT(*) AS total FROM datas');
+		$total = $req->fetch(PDO::FETCH_LAZY)->total;
+
+		$req = $mysql->query('SELECT *, IF((up+down) = 0, 0, ROUND((up-down) / (up+down) * 100)) as total_percent FROM datas ORDER BY id DESC LIMIT ' . $start . ', ' . $limit);
+	}
+
+    $pagConfig = array(
+		'currentPage' => $start,
+        'totalRows'   => $total,
+        'perPage'     => $limit,
+        'link_func'   => 'paginationData'
+    );
+
+    $pagination = new Pagination($pagConfig);
+?>
+<table class="tab_list">
+	<tr>
+		<td width="250">
+			<strong>NICK</strong>
+		</td>
+		<td width="250">
+			<strong>BOARD</strong>
+		</td>
+		<td width="250">
+			<strong>SCREENSHOT</strong>
+		</td>
+		<td width="250">
+			<strong>RATE/HATE</strong>
+		</td>
+	</tr>
+<?php
+	if ($req->rowCount()) {
+		foreach ($req->fetchAll() as $row) {
+?>
+	<tr>
+		<td width="250">
+			<?php echo(htmlentities($row['Nick'])); ?>
+		</td>
+		<td width="250">
+			<a href="<?php echo($hidereferer . htmlentities($row['Link'])); ?>" title="<?php echo(htmlentities($row['Board'], ENT_QUOTES)); ?>"><?php echo(htmlentities($row['Board'])); ?></a>
+		</td>
+		<td width="250">
+<?php
+	if ($row['Screenshot']) {
+?>
+			<a href="<?php echo(htmlentities($row['Screenshot'], ENT_QUOTES)); ?>" class="highslide" onclick="return hs.expand(this)" onmouseover="getCover(event)" cover="<?php echo(htmlentities($row['Screenshot'], ENT_QUOTES)); ?>" onmouseleave="ungetCover(event)">Click to view</a>
+<?php
+	}
+	else {
+?>
+			<label style="color: grey;" onmouseover="getCover(event)" cover="" onmouseleave="ungetCover(event)">Unavailable</label>
+<?php
+	}
+?>
+		</td>
+		<td width="250">
+			<a href="javascript:void(0);" onClick="cwRating(<?php echo($row['id']); ?>,1,'up_down_percent<?php echo($row['id']); ?>')">
+				<img style="margin-right: 11px;" src="images/thumbs-up2.gif" />
+			</a>
+			<a href="javascript:void(0);" onClick="cwRating(<?php echo($row['id']); ?>,0,'up_down_percent<?php echo($row['id']); ?>')">
+				<img style="margin-right: 11px;" src="images/thumbs-down1.gif" />
+			</a>
+			<span style="font-size:14px;" id="up_down_percent<?php echo($row['id']); ?>"><?php echo($row['total_percent']); ?> %</span>
+		</td>
+	</tr>
+<?php
+		}
+	}
+	else {
+?>
+	<tr>
+		<td colspan="4">
+			<p class="error_not_found">Aucun élement ne correspond à votre recherche.</p>
+		</td>
+	</tr>
+<?php
+	}
+?>
+</table>
+<?php
+	echo $pagination->createLinks();

@@ -1,4 +1,4 @@
-![Skid](https://cloud.githubusercontent.com/assets/8536299/26531185/2427cdda-43e4-11e7-8fff-a03b1fbf8be0.png)
+![lame](https://user-images.githubusercontent.com/8536299/26941041-46732d3e-4c7d-11e7-8920-d0563f9e5207.png)
 
-# Rank-my-Skid
-jquery/php/mysql powered, ridiculous post ranking system, code unfinished (rating system missing, and need to finish pagination).
+# Rate-my-lame
+jQuery/PHP/MySQL powered, like/dislike system with pagination and image preview.
